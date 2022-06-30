@@ -44,8 +44,11 @@ def reorder_shard(
                 with fsspec.open(metadata_file, "rb") as f:
                     metadata_df = pd.read_parquet(f)
                 log("Read metadata")
-                metadata_df["img_shard"] = metadata_df.image_path.str[:-index_width].astype(int)
-                metadata_df["img_index"] = metadata_df.image_path.str[-index_width:].astype(int)
+                # print(index_width) #4
+                tmpind1 = metadata_df.image_path[0].find("/")+1 # 14
+                tmpind2 = metadata_df.image_path[0].find(".jpg") # 23
+                metadata_df["img_shard"] = metadata_df.image_path.str[tmpind1:tmpind2-index_width].astype(int)
+                metadata_df["img_index"] = metadata_df.image_path.str[tmpind2-index_width:tmpind2].astype(int)
                 metadata_df["original_index"] = metadata_df.index
                 metadata_df.drop(
                     metadata_df.columns.difference(["original_index", "img_shard", "img_index"]), 1, inplace=True
@@ -114,6 +117,8 @@ def reorder_shard(
             return_queue.put(return_data)
         return [return_data["shard"], False]
 
+def temp_lambda_fn(img_embed_file, metadata, output_folder, index_width, output_shard_width, verbose):
+    return reorder_shard(img_embed_file, metadata, output_folder, index_width, output_shard_width, verbose, 3)
 
 def reorder_embeddings(
     output_folder,
@@ -180,9 +185,10 @@ def reorder_embeddings(
             return_queue = Queue()
             with Pool(run_concurrent) as pool:
                 pool.starmap(
-                    lambda d: reorder_shard(
-                        d[0], d[1], output_folder, index_width, output_shard_width, verbose, 3, return_queue
-                    ),
+                    # lambda d: reorder_shard(
+                    #     d[0], d[1], output_folder, index_width, output_shard_width, verbose, 3, return_queue
+                    # ),
+                    temp_lambda_fn,
                     data,
                 )
             # Convert queue to list

@@ -57,7 +57,8 @@ def test_inference(
     output_folder = os.path.abspath(output_folder)
     num_tars = len([name for name in os.listdir(input_folder) if ".tar" in name])
     print(f"Found {num_tars} shards of webdataset in {input_folder}.")
-    input_path = '"' + input_folder + "/0000{0.." + str(num_tars - 1) + '}.tar"'
+    # input_path = '"' + input_folder + "/0000{0.." + str(num_tars - 1) + '}.tar"'
+    input_path = input_folder + "/0000{0.." + str(num_tars - 1) + '}.tar'
     clip_inference(
         input_dataset=input_path,
         output_folder=output_folder,
